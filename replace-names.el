@@ -28,7 +28,7 @@
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
 ;; URL: https://github.com/knu/replace-names.el
 ;; Created: 7 Seq 2017
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((string-inflection "1.0.5") (inflections "1.1"))
 ;; Keywords: matching
 
@@ -138,7 +138,7 @@ specify the region to operate on."
                                  string-inflection-functions))
          (from-plurals (mapcar #'(lambda (func) (funcall func from-plural))
                                string-inflection-functions))
-         (regexp (regexp-opt (append from-singulars from-plurals)
+         (regexp (regexp-opt (append from-plurals from-singulars)
                              (if delimited 'symbols t)))
          (re-singulars (concat "\\`" (regexp-opt from-singulars t) "\\'"))
          (to-singular (replace-names--singularize-string to-string))
