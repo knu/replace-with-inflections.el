@@ -28,8 +28,8 @@
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
 ;; URL: https://github.com/knu/replace-names.el
 ;; Created: 7 Seq 2017
-;; Version: 0.1.0
-;; Package-Requires: ((string-inflection "1.0.5"))
+;; Version: 0.2.0
+;; Package-Requires: ((string-inflection "1.0.5") (inflections "1.1"))
 ;; Keywords: matching
 
 ;;; Commentary:
@@ -49,6 +49,15 @@
 (eval-when-compile
   (require 'cl))
 (require 'string-inflection)
+(require 'inflections)
+
+;; monkey-patch these until https://github.com/eschulte/jump.el/pull/13 is merged
+(defadvice inflection-singularize-string
+    (around save-match-data activate)
+  (save-match-data ad-do-it))
+(defadvice inflection-pluralize-string
+    (around save-match-data activate)
+  (save-match-data ad-do-it))
 
 (defun replace-names--format-string-like (str model-str)
   "Format STR like MODEL-STR."
@@ -67,18 +76,40 @@
    (t
     str)))
 
+(defun replace-names--singularize-string (str)
+  (let* ((underscore (string-inflection-underscore-function str))
+         (singular (replace-regexp-in-string "[^_]+\\'"
+                                             #'inflection-singularize-string
+                                             underscore)))
+    (replace-names--format-string-like singular str)))
+
+(defun replace-names--pluralize-string (str)
+  (let* ((underscore (string-inflection-underscore-function str))
+         (plural (replace-regexp-in-string "[^_]+\\'"
+                                           #'inflection-pluralize-string
+                                           underscore)))
+    (replace-names--format-string-like plural str)))
+
+(defun replace-names--singular-p (str)
+  ;; There may be a noun in plural form that is another noun in
+  ;; singular form, but anyway...
+  (string= str (replace-names--singularize-string str)))
+
+(defun replace-names--plural-p (str)
+  (string= str (replace-names--pluralize-string str)))
+
 ;;;###autoload
 (defun query-replace-names-with-inflections (from-string to-string &optional delimited start end)
   "Interactively replace various forms of FROM-STRING with those of TO-STRING.
 
-Occurences of FROM-STRING in any of underscore, upcase,
-camelcase, lower-camelcase or kebab case forms match, and each
-replacement will be the same form of TO-STRING as the one
-matched.
+Occurences of FROM-STRING in any combination of singular or
+plural and underscore, upcase, camelcase, lower-camelcase or
+kebab case forms will match, and each replacement will be
+TO-STRING transformed to match the form of the one matched.
 
 For example, replacing `foo_bar' with `baz_quux' will also
-replace `FooBar' with `BazQuux', `FOO_BAR' with `BAZ_QUUX', and
-so on.
+replace `foo_bars' with `baz_quuxes', `FooBar' with `BazQuux',
+`FOO_BAR' with `BAZ_QUUX', and so on.
 
 Third arg DELIMITED (prefix arg if interactive), if non-nil,
 means replace only matches that are surrounded by symbol
@@ -96,15 +127,23 @@ specify the region to operate on."
      (list (nth 0 common) (nth 1 common) (nth 2 common)
 	   (if (use-region-p) (region-beginning))
 	   (if (use-region-p) (region-end)))))
-  (let ((regexp (regexp-opt
-                 (mapcar #'(lambda (func) (funcall func from-string))
-                         '(string-inflection-underscore-function
-                           string-inflection-upcase-function
-                           string-inflection-camelcase-function
-                           string-inflection-lower-camelcase-function
-                           string-inflection-kebab-case-function))
-                 (if delimited 'symbols t)))
-        (orig-query-replace-descr (symbol-function 'query-replace-descr)))
+  (let* ((from-singular (replace-names--singularize-string from-string))
+         (from-plural (replace-names--pluralize-string from-string))
+         (string-inflection-functions '(string-inflection-underscore-function
+                                        string-inflection-upcase-function
+                                        string-inflection-camelcase-function
+                                        string-inflection-lower-camelcase-function
+                                        string-inflection-kebab-case-function))
+         (from-singulars (mapcar #'(lambda (func) (funcall func from-singular))
+                                 string-inflection-functions))
+         (from-plurals (mapcar #'(lambda (func) (funcall func from-plural))
+                               string-inflection-functions))
+         (regexp (regexp-opt (append from-singulars from-plurals)
+                             (if delimited 'symbols t)))
+         (re-singulars (concat "\\`" (regexp-opt from-singulars t) "\\'"))
+         (to-singular (replace-names--singularize-string to-string))
+         (to-plural (replace-names--pluralize-string to-string))
+         (orig-query-replace-descr (symbol-function 'query-replace-descr)))
     (letf (((symbol-function 'query-replace-descr)
             (lambda (string)
               (funcall orig-query-replace-descr
@@ -112,7 +151,11 @@ specify the region to operate on."
                            (match-string 1) ;; show the matched name instead of the regexp pattern
                          string)))))
       (query-replace-regexp-eval regexp
-                                 `(replace-names--format-string-like ,to-string (match-string 1))
+                                 `(let ((matched (match-string 1)))
+                                    (replace-names--format-string-like
+                                     (if (string-match-p re-singulars matched)
+                                         to-singular to-plural)
+                                     matched))
                                  nil start end))))
 
 (provide 'replace-names)
