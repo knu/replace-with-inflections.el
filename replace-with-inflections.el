@@ -28,7 +28,7 @@
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
 ;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((string-inflection "1.0.5") (inflections "1.1"))
 ;; Keywords: matching
 
@@ -90,22 +90,17 @@
                                            underscore)))
     (replace-with-inflections--format-string-like plural str)))
 
-(defun replace-with-inflections--singular-p (str)
-  ;; There may be a noun in plural form that is another noun in
-  ;; singular form, but anyway...
-  (string= str (replace-with-inflections--singularize-string str)))
-
-(defun replace-with-inflections--plural-p (str)
-  (string= str (replace-with-inflections--pluralize-string str)))
-
 ;;;###autoload
 (defun query-replace-names-with-inflections (from-string to-string &optional delimited start end)
   "Interactively replace various forms of FROM-STRING with those of TO-STRING.
 
-Occurences of FROM-STRING in any combination of singular or
-plural and underscore, upcase, camelcase, lower-camelcase or
-kebab case forms will match, and each replacement will be
-TO-STRING transformed to match the form of the one matched.
+Occurences of FROM-STRING in any of the underscore, upcase,
+camelcase, lower-camelcase or kebab case forms will match, and
+each replacement will be TO-STRING transformed to match the form
+of the one matched.  If the pluralities of FROM-STRING and
+TO-STRING match, both singular and plural forms of the
+FROM-STRING variations will be replace with the corresponding
+forms of TO-STRING.
 
 For example, replacing `foo_bar' with `baz_quux' will also
 replace `foo_bars' with `baz_quuxes', `FooBar' with `BazQuux',
@@ -129,6 +124,18 @@ specify the region to operate on."
 	   (if (use-region-p) (region-end)))))
   (let* ((from-singular (replace-with-inflections--singularize-string from-string))
          (from-plural (replace-with-inflections--pluralize-string from-string))
+         (from-singular-p (string= from-string from-singular))
+         (from-plural-p (string= from-string from-plural))
+         (to-singular (replace-with-inflections--singularize-string to-string))
+         (to-plural (replace-with-inflections--pluralize-string to-string))
+         (to-singular-p (string= to-string to-singular))
+         (to-plural-p (string= to-string to-plural))
+         ;; If the pluraliries of FROM-STRING and TO-STRING do not
+         ;; seem to match, disable support for number inflections.
+         (number-inflection-p (or (and from-singular-p to-singular-p)
+                                  (and from-plural-p to-plural-p)))
+         (from-singular (if number-inflection-p from-singular from-string))
+         (to-singular (if number-inflection-p to-singular to-string))
          (string-inflection-functions '(string-inflection-underscore-function
                                         string-inflection-upcase-function
                                         string-inflection-camelcase-function
@@ -136,13 +143,12 @@ specify the region to operate on."
                                         string-inflection-kebab-case-function))
          (from-singulars (mapcar #'(lambda (func) (funcall func from-singular))
                                  string-inflection-functions))
-         (from-plurals (mapcar #'(lambda (func) (funcall func from-plural))
-                               string-inflection-functions))
+         (from-plurals (if number-inflection-p
+                           (mapcar #'(lambda (func) (funcall func from-plural))
+                                   string-inflection-functions)))
          (regexp (regexp-opt (append from-plurals from-singulars)
                              (if delimited 'symbols t)))
          (re-singulars (concat "\\`" (regexp-opt from-singulars t) "\\'"))
-         (to-singular (replace-with-inflections--singularize-string to-string))
-         (to-plural (replace-with-inflections--pluralize-string to-string))
          (orig-query-replace-descr (symbol-function 'query-replace-descr)))
     (letf (((symbol-function 'query-replace-descr)
             (lambda (string)
