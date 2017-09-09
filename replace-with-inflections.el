@@ -1,4 +1,4 @@
-;;; replace-names.el --- Provides `query-replace-names-with-inflections'.
+;;; replace-with-inflections.el --- Provides `query-replace-names-with-inflections'.
 
 ;; Copyright (c) 2017 Akinori MUSHA
 ;;
@@ -26,7 +26,7 @@
 ;; SUCH DAMAGE.
 
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
-;; URL: https://github.com/knu/replace-names.el
+;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
 ;; Version: 0.2.1
 ;; Package-Requires: ((string-inflection "1.0.5") (inflections "1.1"))
@@ -59,7 +59,7 @@
     (around save-match-data activate)
   (save-match-data ad-do-it))
 
-(defun replace-names--format-string-like (str model-str)
+(defun replace-with-inflections--format-string-like (str model-str)
   "Format STR like MODEL-STR."
   (cond
    ((or (string-inflection-word-p model-str)
@@ -76,27 +76,27 @@
    (t
     str)))
 
-(defun replace-names--singularize-string (str)
+(defun replace-with-inflections--singularize-string (str)
   (let* ((underscore (string-inflection-underscore-function str))
          (singular (replace-regexp-in-string "[^_]+\\'"
                                              #'inflection-singularize-string
                                              underscore)))
-    (replace-names--format-string-like singular str)))
+    (replace-with-inflections--format-string-like singular str)))
 
-(defun replace-names--pluralize-string (str)
+(defun replace-with-inflections--pluralize-string (str)
   (let* ((underscore (string-inflection-underscore-function str))
          (plural (replace-regexp-in-string "[^_]+\\'"
                                            #'inflection-pluralize-string
                                            underscore)))
-    (replace-names--format-string-like plural str)))
+    (replace-with-inflections--format-string-like plural str)))
 
-(defun replace-names--singular-p (str)
+(defun replace-with-inflections--singular-p (str)
   ;; There may be a noun in plural form that is another noun in
   ;; singular form, but anyway...
-  (string= str (replace-names--singularize-string str)))
+  (string= str (replace-with-inflections--singularize-string str)))
 
-(defun replace-names--plural-p (str)
-  (string= str (replace-names--pluralize-string str)))
+(defun replace-with-inflections--plural-p (str)
+  (string= str (replace-with-inflections--pluralize-string str)))
 
 ;;;###autoload
 (defun query-replace-names-with-inflections (from-string to-string &optional delimited start end)
@@ -127,8 +127,8 @@ specify the region to operate on."
      (list (nth 0 common) (nth 1 common) (nth 2 common)
 	   (if (use-region-p) (region-beginning))
 	   (if (use-region-p) (region-end)))))
-  (let* ((from-singular (replace-names--singularize-string from-string))
-         (from-plural (replace-names--pluralize-string from-string))
+  (let* ((from-singular (replace-with-inflections--singularize-string from-string))
+         (from-plural (replace-with-inflections--pluralize-string from-string))
          (string-inflection-functions '(string-inflection-underscore-function
                                         string-inflection-upcase-function
                                         string-inflection-camelcase-function
@@ -141,8 +141,8 @@ specify the region to operate on."
          (regexp (regexp-opt (append from-plurals from-singulars)
                              (if delimited 'symbols t)))
          (re-singulars (concat "\\`" (regexp-opt from-singulars t) "\\'"))
-         (to-singular (replace-names--singularize-string to-string))
-         (to-plural (replace-names--pluralize-string to-string))
+         (to-singular (replace-with-inflections--singularize-string to-string))
+         (to-plural (replace-with-inflections--pluralize-string to-string))
          (orig-query-replace-descr (symbol-function 'query-replace-descr)))
     (letf (((symbol-function 'query-replace-descr)
             (lambda (string)
@@ -152,11 +152,11 @@ specify the region to operate on."
                          string)))))
       (query-replace-regexp-eval regexp
                                  `(let ((matched (match-string 1)))
-                                    (replace-names--format-string-like
+                                    (replace-with-inflections--format-string-like
                                      (if (string-match-p re-singulars matched)
                                          to-singular to-plural)
                                      matched))
                                  nil start end))))
 
-(provide 'replace-names)
-;;; replace-names.el ends here
+(provide 'replace-with-inflections)
+;;; replace-with-inflections.el ends here
