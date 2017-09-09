@@ -1,4 +1,4 @@
-;;; replace-with-inflections.el --- Provides `query-replace-names-with-inflections'.
+;;; replace-with-inflections.el --- Inflection aware `query-replace'
 
 ;; Copyright (c) 2017 Akinori MUSHA
 ;;
@@ -38,7 +38,18 @@
 ;;
 ;; * `query-replace-names-with-inflections'
 ;;
+;; Tis is an inflection aware version of `query-replace'.  For
+;; example, replacing "foo_bar" with "baz_quux" will also replace
+;; "foo_bars" with "baz_quuxes", "FooBar" with "BazQuux", "FOO_BAR"
+;; with "BAZ_QUUX", and so on.
+;;
 ;; Read the docstring for details.
+;;
+;; For the term "inflection", refer to the following packages which this
+;; library depends on:
+;;
+;; * inflections: URL `https://github.com/eschulte/jump.el'
+;; * string-inflection: URL `https://github.com/akicho8/string-inflection'
 ;;
 ;; Here's my suggested settings:
 ;;
@@ -92,7 +103,8 @@
 
 ;;;###autoload
 (defun query-replace-names-with-inflections (from-string to-string &optional delimited start end)
-  "Interactively replace various forms of FROM-STRING with those of TO-STRING.
+  "\
+Interactively replace various forms of FROM-STRING with those of TO-STRING.
 
 Occurences of FROM-STRING in any of the underscore, upcase,
 camelcase, lower-camelcase or kebab case forms will match, and
@@ -102,9 +114,15 @@ TO-STRING match, both singular and plural forms of the
 FROM-STRING variations will be replace with the corresponding
 forms of TO-STRING.
 
-For example, replacing `foo_bar' with `baz_quux' will also
-replace `foo_bars' with `baz_quuxes', `FooBar' with `BazQuux',
-`FOO_BAR' with `BAZ_QUUX', and so on.
+For example, replacing \"foo_bar\" with \"baz_quux\" will also
+replace \"foo_bars\" with \"baz_quuxes\", \"FooBar\" with
+\"BazQuux\", \"FOO_BAR\" with \"BAZ_QUUX\", and so on.
+
+For the term \"inflection\", refer to the following packages
+which this library depends on:
+
+* inflections: URL `https://github.com/eschulte/jump.el'
+* string-inflection: URL `https://github.com/akicho8/string-inflection'
 
 Third arg DELIMITED (prefix arg if interactive), if non-nil,
 means replace only matches that are surrounded by symbol
