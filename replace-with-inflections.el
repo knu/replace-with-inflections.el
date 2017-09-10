@@ -62,14 +62,6 @@
 (require 'string-inflection)
 (require 'inflections)
 
-;; monkey-patch these until https://github.com/eschulte/jump.el/pull/13 is merged
-(defadvice inflection-singularize-string
-    (around save-match-data activate)
-  (save-match-data ad-do-it))
-(defadvice inflection-pluralize-string
-    (around save-match-data activate)
-  (save-match-data ad-do-it))
-
 (defun replace-with-inflections--format-string-like (str model-str)
   "Format STR like MODEL-STR."
   (cond
