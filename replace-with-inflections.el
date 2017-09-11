@@ -29,7 +29,7 @@
 ;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
 ;; Version: 0.3.0
-;; Package-Requires: ((string-inflection "1.0.5") (inflections "1.1"))
+;; Package-Requires: ((cl-lib "0.5") (string-inflection "1.0.5") (inflections "1.1"))
 ;; Keywords: matching
 
 ;;; Commentary:
@@ -57,8 +57,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 (require 'string-inflection)
 (require 'inflections)
 
@@ -160,12 +159,12 @@ specify the region to operate on."
                              (if delimited 'symbols t)))
          (re-singulars (concat "\\`" (regexp-opt from-singulars t) "\\'"))
          (orig-query-replace-descr (symbol-function 'query-replace-descr)))
-    (letf (((symbol-function 'query-replace-descr)
-            (lambda (string)
-              (funcall orig-query-replace-descr
-                       (if (string-equal string regexp)
-                           (match-string 1) ;; show the matched name instead of the regexp pattern
-                         string)))))
+    (cl-letf (((symbol-function 'query-replace-descr)
+               (lambda (string)
+                 (funcall orig-query-replace-descr
+                          (if (string-equal string regexp)
+                              (match-string 1) ;; show the matched name instead of the regexp pattern
+                            string)))))
       (query-replace-regexp-eval regexp
                                  `(let ((matched (match-string 1)))
                                     (replace-with-inflections--format-string-like
