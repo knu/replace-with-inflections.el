@@ -19,6 +19,14 @@ library depends on:
 * [inflections](https://github.com/eschulte/jump.el)
 * [string-inflection](https://github.com/akicho8/string-inflection)
 
+## Installation
+
+This package is available on [MELPA](http://melpa.org/#/replace-with-inflections)/[MELPA Stable](http://stable.melpa.org/#/replace-with-inflections)
+
+```
+M-x package-install replace-with-inflections
+```
+
 ## Configuration
 
 Here's my suggested settings:
