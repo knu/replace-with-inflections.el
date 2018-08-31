@@ -29,7 +29,7 @@
 ;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
 ;; Version: 0.3.0
-;; Package-Requires: ((cl-lib "0.5") (string-inflection "1.0.5") (inflections "1.1"))
+;; Package-Requires: ((cl-lib "0.5") (string-inflection "1.0.10") (inflections "1.1"))
 ;; Keywords: matching
 
 ;;; Commentary:
@@ -69,12 +69,14 @@
     (string-inflection-underscore-function str))
    ((string-inflection-upcase-p model-str)
     (string-inflection-upcase-function str))
+   ((string-inflection-pascal-case-p model-str)
+    (string-inflection-pascal-case-function str))
    ((string-inflection-camelcase-p model-str)
     (string-inflection-camelcase-function str))
-   ((string-inflection-lower-camelcase-p model-str)
-    (string-inflection-lower-camelcase-function str))
    ((string-inflection-kebab-case-p model-str)
     (string-inflection-kebab-case-function str))
+   ((string-inflection-capital-underscore-p model-str)
+    (string-inflection-capital-underscore-function str))
    (t
     str)))
 
@@ -147,9 +149,10 @@ specify the region to operate on."
          (to-singular (if number-inflection-p to-singular to-string))
          (string-inflection-functions '(string-inflection-underscore-function
                                         string-inflection-upcase-function
+                                        string-inflection-pascal-case-function
                                         string-inflection-camelcase-function
-                                        string-inflection-lower-camelcase-function
-                                        string-inflection-kebab-case-function))
+                                        string-inflection-kebab-case-function
+                                        string-inflection-capital-underscore-function))
          (from-singulars (mapcar #'(lambda (func) (funcall func from-singular))
                                  string-inflection-functions))
          (from-plurals (if number-inflection-p
