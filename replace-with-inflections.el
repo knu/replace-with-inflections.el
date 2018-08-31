@@ -1,6 +1,6 @@
 ;;; replace-with-inflections.el --- Inflection aware `query-replace'
 
-;; Copyright (c) 2017 Akinori MUSHA
+;; Copyright (c) 2017-2018 Akinori MUSHA
 ;;
 ;; All rights reserved.
 ;;
@@ -28,7 +28,7 @@
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
 ;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
-;; Version: 0.3.0
+;; Version: 0.3.1
 ;; Package-Requires: ((cl-lib "0.5") (string-inflection "1.0.10") (inflections "1.1"))
 ;; Keywords: matching
 
