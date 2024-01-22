@@ -1,6 +1,6 @@
 ;;; replace-with-inflections.el --- Inflection aware `query-replace'
 
-;; Copyright (c) 2017-2018 Akinori MUSHA
+;; Copyright (c) 2017-2024 Akinori MUSHA
 ;;
 ;; All rights reserved.
 ;;
@@ -28,7 +28,7 @@
 ;; Author: Akinori MUSHA <knu@iDaemons.org>
 ;; URL: https://github.com/knu/replace-with-inflections.el
 ;; Created: 7 Seq 2017
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Package-Requires: ((cl-lib "0.5") (string-inflection "1.0.10") (inflections "1.1"))
 ;; Keywords: matching
 
@@ -168,13 +168,14 @@ specify the region to operate on."
                           (if (string-equal string regexp)
                               (match-string 1) ;; show the matched name instead of the regexp pattern
                             string)))))
-      (query-replace-regexp-eval regexp
-                                 `(let ((matched (match-string 1)))
-                                    (replace-with-inflections--format-string-like
-                                     (if (string-match-p re-singulars matched)
-                                         to-singular to-plural)
-                                     matched))
-                                 nil start end))))
+      (query-replace-regexp regexp
+                            `((lambda (_ count)
+                                (let ((matched (match-string 1)))
+                                  (replace-with-inflections--format-string-like
+                                   (if (string-match-p ,re-singulars matched)
+                                       ,to-singular ,to-plural)
+                                   matched))) nil)
+                            nil start end))))
 
 (provide 'replace-with-inflections)
 ;;; replace-with-inflections.el ends here

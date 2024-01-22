@@ -37,7 +37,7 @@ Here's my suggested settings:
 
 ## Author
 
-Copyright (c) 2017 Akinori MUSHA.
+Copyright (c) 2017-2024 Akinori MUSHA.
 
 Licensed under the 2-clause BSD license.  See `LICENSE.txt` for
 details.
